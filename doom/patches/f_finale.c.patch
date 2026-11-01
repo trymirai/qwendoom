@@ -1,0 +1,14 @@
+--- a/f_finale.c
++++ b/f_finale.c
+@@ -613,8 +613,9 @@
+     int		stage;
+     static int	laststage;
+ 		
+-    p1 = W_CacheLumpName (DEH_String("PFUB2"), PU_LEVEL);
+-    p2 = W_CacheLumpName (DEH_String("PFUB1"), PU_LEVEL);
++    // qwendoom: PU_LEVEL blocks live in the sim's RAM; these are host-only pictures
++    p1 = W_CacheLumpName (DEH_String("PFUB2"), PU_CACHE);
++    p2 = W_CacheLumpName (DEH_String("PFUB1"), PU_CACHE);
+ 
+     V_MarkRect (0, 0, SCREENWIDTH, SCREENHEIGHT);
+ 	

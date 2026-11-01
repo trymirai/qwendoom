@@ -1,0 +1,103 @@
+--- a/p_setup.c
++++ b/p_setup.c
+@@ -39,6 +39,7 @@
+ #include "s_sound.h"
+ 
+ #include "doomstat.h"
++#include "qd_doom.h"
+ 
+ 
+ void	P_SpawnMapThing (mapthing_t*	mthing);
+@@ -127,7 +128,8 @@
+     numvertexes = W_LumpLength (lump) / sizeof(mapvertex_t);
+ 
+     // Allocate zone memory for buffer.
+-    vertexes = Z_Malloc (numvertexes*sizeof(vertex_t),PU_LEVEL,0);	
++    // qwendoom: read-only level data goes to DROM (the sim loads it, never stores)
++    vertexes = qd_drom_alloc (numvertexes*sizeof(vertex_t));
+ 
+     // Load data into cache.
+     data = W_CacheLumpNum (lump, PU_STATIC);
+@@ -181,7 +183,7 @@
+     int                 sidenum;
+ 	
+     numsegs = W_LumpLength (lump) / sizeof(mapseg_t);
+-    segs = Z_Malloc (numsegs*sizeof(seg_t),PU_LEVEL,0);	
++    segs = qd_drom_alloc (numsegs*sizeof(seg_t));  // qwendoom: DROM
+     memset (segs, 0, numsegs*sizeof(seg_t));
+     data = W_CacheLumpNum (lump,PU_STATIC);
+ 	
+@@ -241,7 +243,7 @@
+     subsector_t*	ss;
+ 	
+     numsubsectors = W_LumpLength (lump) / sizeof(mapsubsector_t);
+-    subsectors = Z_Malloc (numsubsectors*sizeof(subsector_t),PU_LEVEL,0);	
++    subsectors = qd_drom_alloc (numsubsectors*sizeof(subsector_t));  // qwendoom: DROM
+     data = W_CacheLumpNum (lump,PU_STATIC);
+ 	
+     ms = (mapsubsector_t *)data;
+@@ -305,7 +307,7 @@
+     node_t*	no;
+ 	
+     numnodes = W_LumpLength (lump) / sizeof(mapnode_t);
+-    nodes = Z_Malloc (numnodes*sizeof(node_t),PU_LEVEL,0);	
++    nodes = qd_drom_alloc (numnodes*sizeof(node_t));  // qwendoom: DROM
+     data = W_CacheLumpNum (lump,PU_STATIC);
+ 	
+     mn = (mapnode_t *)data;
+@@ -510,7 +512,7 @@
+     lumplen = W_LumpLength(lump);
+     count = lumplen / 2;
+ 	
+-    blockmaplump = Z_Malloc(lumplen, PU_LEVEL, NULL);
++    blockmaplump = qd_drom_alloc(lumplen);  // qwendoom: DROM
+     W_ReadLump(lump, blockmaplump);
+     blockmap = blockmaplump + 4;
+ 
+@@ -578,7 +580,7 @@
+     }
+ 
+     // build line tables for each sector	
+-    linebuffer = Z_Malloc (totallines*sizeof(line_t *), PU_LEVEL, 0);
++    linebuffer = qd_drom_alloc (totallines*sizeof(line_t *));  // qwendoom: DROM
+ 
+     for (i=0; i<numsectors; ++i)
+     {
+@@ -724,13 +726,15 @@
+ 
+     lumplen = W_LumpLength(lumpnum);
+ 
++    // qwendoom: the reject matrix is read-only level data: DROM
+     if (lumplen >= minlength)
+     {
+-        rejectmatrix = W_CacheLumpNum(lumpnum, PU_LEVEL);
++        rejectmatrix = qd_drom_alloc(lumplen);
++        W_ReadLump(lumpnum, rejectmatrix);
+     }
+     else
+     {
+-        rejectmatrix = Z_Malloc(minlength, PU_LEVEL, &rejectmatrix);
++        rejectmatrix = qd_drom_alloc(minlength);
+         W_ReadLump(lumpnum, rejectmatrix);
+ 
+         PadRejectArray(rejectmatrix + lumplen, minlength - lumplen);
+@@ -768,6 +772,10 @@
+ 
+     Z_FreeTags (PU_LEVEL, PU_PURGELEVEL-1);
+ 
++    // qwendoom: a new level for the sim: free the DROM level data, resync when done
++    qd_level_begin ();
++    qd_drom_reset ();
++
+     // UNUSED W_Profile ();
+     P_InitThinkers ();
+ 	   
+@@ -835,6 +843,8 @@
+     if (precache)
+ 	R_PrecacheLevel ();
+ 
++    qd_level_loaded ();
++
+     //printf ("free memory: 0x%x\n", Z_FreeMemory());
+ 
+ }

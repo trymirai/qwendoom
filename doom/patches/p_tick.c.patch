@@ -1,0 +1,28 @@
+--- a/p_tick.c
++++ b/p_tick.c
+@@ -123,21 +123,10 @@
+ void P_Ticker (void)
+ {
+     int		i;
+-    
+-    // run the tic
+-    if (paused)
+-	return;
+-		
+-    // pause if in menu and at least one tic has been run
+-    if ( !netgame
+-	 && menuactive
+-	 && !demoplayback
+-	 && players[consoleplayer].viewz != 1)
+-    {
+-	return;
+-    }
+-    
+-		
++
++    // qwendoom: this runs in the sim (sim_main); the pause / menu checks that used to
++    // start it run on the host, in G_Ticker, before it asks for a sim tick
++
+     for (i=0 ; i<MAXPLAYERS ; i++)
+ 	if (playeringame[i])
+ 	    P_PlayerThink (&players[i]);

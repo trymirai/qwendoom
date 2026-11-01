@@ -1,0 +1,12 @@
+--- a/p_doors.c
++++ b/p_doors.c
+@@ -437,8 +437,7 @@
+                 {
+                     // This isn't a door OR a plat.  Now we're in trouble.
+ 
+-                    fprintf(stderr, "EV_VerticalDoor: Tried to close "
+-                                    "something that wasn't a door.\n");
++                    // qwendoom: no stdio in the sim (vanilla printed a warning here)
+ 
+                     // Try closing it anyway. At least it will work on 32-bit
+                     // machines.

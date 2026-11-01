@@ -1,0 +1,55 @@
+--- a/g_game.c
++++ b/g_game.c
+@@ -71,6 +71,7 @@
+ 
+ 
+ #include "g_game.h"
++#include "qd_doom.h"
+ 
+ 
+ #define SAVEGAMESIZE	0x2c000
+@@ -1005,7 +1006,16 @@
+     switch (gamestate) 
+     { 
+       case GS_LEVEL: 
+-	P_Ticker (); 
++	// qwendoom: P_Ticker runs in the sim. Its pause checks stay here (no tokens are spent
++	// while paused or in the menu): run the tic unless paused, or in the menu once at
++	// least one tic has run.
++	if (!paused
++	 && !(!netgame && menuactive && !demoplayback
++	      && players[consoleplayer].viewz != 1))
++	{
++	    qd_sim_tick ();
++	    qd_after_sim_tick ();
++	}
+ 	ST_Ticker (); 
+ 	AM_Ticker (); 
+ 	HU_Ticker ();            
+@@ -1334,12 +1344,9 @@
+ // Here's for the german edition.
+ void G_SecretExitLevel (void) 
+ { 
+-    // IF NO WOLF3D LEVELS, NO SECRET EXIT!
+-    if ( (gamemode == commercial)
+-      && (W_CheckNumForName("map31")<0))
+-	secretexit = false;
+-    else
+-	secretexit = true; 
++    // qwendoom: this runs in the sim; G_DoCompleted (host) cancels the secret exit when
++    // there are no Wolfenstein levels (the WAD directory is host data)
++    secretexit = true; 
+     gameaction = ga_completed; 
+ } 
+  
+@@ -1348,6 +1355,10 @@
+     int             i; 
+ 	 
+     gameaction = ga_nothing; 
++
++    // IF NO WOLF3D LEVELS, NO SECRET EXIT! (moved here from G_SecretExitLevel)
++    if (secretexit && gamemode == commercial && W_CheckNumForName("map31") < 0)
++	secretexit = false;
+  
+     for (i=0 ; i<MAXPLAYERS ; i++) 
+ 	if (playeringame[i]) 

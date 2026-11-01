@@ -1,0 +1,19 @@
+--- a/p_inter.c
++++ b/p_inter.c
+@@ -38,6 +38,7 @@
+ #include "s_sound.h"
+ 
+ #include "p_inter.h"
++#include "qd_doom.h"
+ 
+ 
+ #define BONUSADD	6
+@@ -709,7 +710,7 @@
+ 	{
+ 	    // don't die in auto map,
+ 	    // switch view prior to dying
+-	    AM_Stop ();
++	    qd_sim_am_stop ();  // qwendoom: the host closes it after the tick
+ 	}
+ 	
+     }

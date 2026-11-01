@@ -1,0 +1,41 @@
+--- a/r_data.c
++++ b/r_data.c
+@@ -37,6 +37,7 @@
+ 
+ 
+ #include "r_data.h"
++#include "qd_doom.h"
+ 
+ //
+ // Graphics.
+@@ -525,7 +526,9 @@
+     texturecomposite = Z_Malloc (numtextures * sizeof(*texturecomposite), PU_STATIC, 0);
+     texturecompositesize = Z_Malloc (numtextures * sizeof(*texturecompositesize), PU_STATIC, 0);
+     texturewidthmask = Z_Malloc (numtextures * sizeof(*texturewidthmask), PU_STATIC, 0);
+-    textureheight = Z_Malloc (numtextures * sizeof(*textureheight), PU_STATIC, 0);
++    // qwendoom: the sim reads texture heights (raiseToTexture floors): a permanent table in DROM
++    textureheight = qd_drom_alloc (numtextures * sizeof(*textureheight));
++    qd_drom_mark ();
+ 
+     totalwidth = 0;
+     
+@@ -617,7 +620,8 @@
+ 	R_GenerateLookup (i);
+     
+     // Create translation table for global animation.
+-    texturetranslation = Z_Malloc ((numtextures+1)*sizeof(*texturetranslation), PU_STATIC, 0);
++    // qwendoom: the sim animates textures (P_UpdateSpecials): the table lives in sim RAM
++    texturetranslation = Z_MallocLevelZone ((numtextures+1)*sizeof(*texturetranslation), PU_STATIC, 0);
+     
+     for (i=0 ; i<numtextures ; i++)
+ 	texturetranslation[i] = i;
+@@ -639,7 +643,8 @@
+     numflats = lastflat - firstflat + 1;
+ 	
+     // Create translation table for global animation.
+-    flattranslation = Z_Malloc ((numflats+1)*sizeof(*flattranslation), PU_STATIC, 0);
++    // qwendoom: the sim animates flats (P_UpdateSpecials): the table lives in sim RAM
++    flattranslation = Z_MallocLevelZone ((numflats+1)*sizeof(*flattranslation), PU_STATIC, 0);
+     
+     for (i=0 ; i<numflats ; i++)
+ 	flattranslation[i] = i;

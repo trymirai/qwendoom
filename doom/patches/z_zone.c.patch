@@ -1,0 +1,227 @@
+--- a/z_zone.c
++++ b/z_zone.c
+@@ -20,6 +20,7 @@
+ #include "z_zone.h"
+ #include "i_system.h"
+ #include "doomtype.h"
++#include "qd_doom.h"
+ 
+ 
+ //
+@@ -63,8 +64,19 @@
+ 
+ memzone_t*	mainzone;
+ 
++// qwendoom: a second zone in sim RAM, from the end of the sim's data (linker script) to
++// 256 KB, for everything the sim allocates or touches per level (PU_LEVEL, PU_LEVSPEC)
++memzone_t*	levelzone;
++extern byte	__sim_ram_end[];
+ 
++static memzone_t *Z_ZoneOf(void *ptr)
++{
++    return (byte *)ptr >= (byte *)levelzone && (byte *)ptr < (byte *)levelzone + levelzone->size
++         ? levelzone : mainzone;
++}
+ 
++
++
+ //
+ // Z_ClearZone
+ //
+@@ -94,32 +106,49 @@
+ //
+ // Z_Init
+ //
+-void Z_Init (void)
++static void Z_InitZone (memzone_t* zone, int size)
+ {
+     memblock_t*	block;
+-    int		size;
+ 
+-    mainzone = (memzone_t *)I_ZoneBase (&size);
+-    mainzone->size = size;
++    zone->size = size;
+ 
+     // set the entire zone to one free block
+-    mainzone->blocklist.next =
+-	mainzone->blocklist.prev =
+-	block = (memblock_t *)( (byte *)mainzone + sizeof(memzone_t) );
++    zone->blocklist.next =
++	zone->blocklist.prev =
++	block = (memblock_t *)( (byte *)zone + sizeof(memzone_t) );
+ 
+-    mainzone->blocklist.user = (void *)mainzone;
+-    mainzone->blocklist.tag = PU_STATIC;
+-    mainzone->rover = block;
++    zone->blocklist.user = (void *)zone;
++    zone->blocklist.tag = PU_STATIC;
++    zone->rover = block;
+ 	
+-    block->prev = block->next = &mainzone->blocklist;
++    block->prev = block->next = &zone->blocklist;
+ 
+-    // free block
++    // a free block.
+     block->tag = PU_FREE;
+     
+-    block->size = mainzone->size - sizeof(memzone_t);
++    block->size = zone->size - sizeof(memzone_t);
+ }
+ 
++void Z_Init (void)
++{
++    int		size;
+ 
++    mainzone = (memzone_t *)I_ZoneBase (&size);
++    Z_InitZone (mainzone, size);
++
++    if (qd_measure_levels)
++    {
++        // doom/measure.py --maps: a large level zone in the host heap, to size levels that do
++        // not fit sim RAM (the sim cannot run on it)
++        levelzone = (memzone_t *)I_ZoneBase (&size);
++        Z_InitZone (levelzone, size);
++        return;
++    }
++    levelzone = (memzone_t *)__sim_ram_end;
++    Z_InitZone (levelzone, QD_RAM_BASE + QD_RAM_SIZE - (uintptr_t)__sim_ram_end);
++}
++
++
+ //
+ // Z_Free
+ //
+@@ -127,6 +156,7 @@
+ {
+     memblock_t*		block;
+     memblock_t*		other;
++    memzone_t*		zone = Z_ZoneOf(ptr);
+ 	
+     block = (memblock_t *) ( (byte *)ptr - sizeof(memblock_t));
+ 
+@@ -153,8 +183,8 @@
+         other->next = block->next;
+         other->next->prev = other;
+ 
+-        if (block == mainzone->rover)
+-            mainzone->rover = other;
++        if (block == zone->rover)
++            zone->rover = other;
+ 
+         block = other;
+     }
+@@ -167,8 +197,8 @@
+         block->next = other->next;
+         block->next->prev = block;
+ 
+-        if (other == mainzone->rover)
+-            mainzone->rover = block;
++        if (other == zone->rover)
++            zone->rover = block;
+     }
+ }
+ 
+@@ -181,9 +211,10 @@
+ #define MINFRAGMENT		64
+ 
+ 
+-void*
+-Z_Malloc
+-( int		size,
++static void*
++Z_MallocIn
++( memzone_t*	zone,
++  int		size,
+   int		tag,
+   void*		user )
+ {
+@@ -206,7 +237,7 @@
+     
+     // if there is a free block behind the rover,
+     //  back up over them
+-    base = mainzone->rover;
++    base = zone->rover;
+     
+     if (base->prev->tag == PU_FREE)
+         base = base->prev;
+@@ -219,7 +250,9 @@
+         if (rover == start)
+         {
+             // scanned all the way around the list
+-            I_Error ("Z_Malloc: failed on allocation of %i bytes", size);
++            I_Error (zone == levelzone
++                     ? "Z_Malloc: the level zone (sim RAM) is full: failed on allocation of %i bytes"
++                     : "Z_Malloc: failed on allocation of %i bytes", size);
+         }
+ 	
+         if (rover->tag != PU_FREE)
+@@ -282,28 +315,45 @@
+     }
+ 
+     // next allocation will start looking here
+-    mainzone->rover = base->next;	
++    zone->rover = base->next;	
+ 	
+     base->id = ZONEID;
+     
+     return result;
+ }
+ 
++void*
++Z_Malloc
++( int		size,
++  int		tag,
++  void*		user )
++{
++    return Z_MallocIn (tag == PU_LEVEL || tag == PU_LEVSPEC ? levelzone : mainzone,
++                       size, tag, user);
++}
+ 
++void* Z_MallocLevelZone (int size, int tag, void *user)
++{
++    return Z_MallocIn (levelzone, size, tag, user);
+ 
++}
++
++
++
+ //
+ // Z_FreeTags
+ //
+-void
+-Z_FreeTags
+-( int		lowtag,
++static void
++Z_FreeTagsIn
++( memzone_t*	zone,
++  int		lowtag,
+   int		hightag )
+ {
+     memblock_t*	block;
+     memblock_t*	next;
+ 	
+-    for (block = mainzone->blocklist.next ;
+-	 block != &mainzone->blocklist ;
++    for (block = zone->blocklist.next ;
++	 block != &zone->blocklist ;
+ 	 block = next)
+     {
+ 	// get link before freeing
+@@ -318,8 +368,17 @@
+     }
+ }
+ 
++void
++Z_FreeTags
++( int		lowtag,
++  int		hightag )
++{
++    Z_FreeTagsIn (mainzone, lowtag, hightag);
++    Z_FreeTagsIn (levelzone, lowtag, hightag);
++}
+ 
+ 
++
+ //
+ // Z_DumpHeap
+ // Note: TFileDumpHeap( stdout ) ?

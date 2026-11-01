@@ -1,0 +1,40 @@
+--- a/p_map.c
++++ b/p_map.c
+@@ -1395,7 +1395,6 @@
+    
+     if (baseaddr == 0)
+     {
+-        int p;
+ 
+         // This is the first time we have had an overrun.  Work out
+         // what base address we are going to use.
+@@ -1408,16 +1407,8 @@
+         // Use the specified magic value when emulating spechit overruns.
+         //
+ 
+-        p = M_CheckParmWithArgs("-spechit", 1);
+-        
+-        if (p > 0)
+-        {
+-            M_StrToInt(myargv[p+1], (int *) &baseaddr);
+-        }
+-        else
+-        {
+-            baseaddr = DEFAULT_SPECHIT_MAGIC;
+-        }
++        // qwendoom: this runs in the sim (no command line): the default magic
++        baseaddr = DEFAULT_SPECHIT_MAGIC;
+     }
+     
+     // Calculate address used in doom2.exe
+@@ -1439,9 +1430,7 @@
+             nofit = addr; 
+             break;
+         default:
+-            fprintf(stderr, "SpechitOverrun: Warning: unable to emulate"
+-                            "an overrun where numspechit=%i\n",
+-                            numspechit);
++            // qwendoom: no stdio in the sim; vanilla's overrun is not emulated here
+             break;
+     }
+ }
