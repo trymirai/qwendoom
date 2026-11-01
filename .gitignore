@@ -1,0 +1,43 @@
+# Fetched third-party sources and data (uv run scripts/fetch_third_party.py)
+/third_party/
+
+# Build outputs: doom.elf, dylibs, engine caches, frames, logs
+/build/
+*.o
+*.a
+*.so
+*.dylib
+*.dSYM/
+*.elf
+*.map
+*.ppm
+*.log
+target/
+
+# The compiled checkpoint is rebuilt by `python -m qwendoom.weights`; only the small
+# config/metadata files are tracked
+/weights/*.safetensors
+/weights/*.bin
+
+# Game data (Freedoom is fetched; a user-supplied doom1.wad stays local)
+*.wad
+*.WAD
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Local tooling
+.env
+.DS_Store
+.idea/
+.vscode/
+.claude/settings.local.json

@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "qwendoom",
+      "runtimeExecutable": ".venv/bin/python",
+      "runtimeArgs": ["-m", "qwendoom", "serve", "--port", "8792"],
+      "port": 8792
+    },
+    {
+      "name": "qwendoom-native",
+      "runtimeExecutable": ".venv/bin/python",
+      "runtimeArgs": ["-m", "qwendoom.server", "--port", "8791", "--source", "native"],
+      "port": 8791
+    }
+  ]
+}

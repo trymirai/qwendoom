@@ -1,0 +1,40 @@
+[project]
+name = "qwendoom"
+version = "0.1.0"
+description = "DOOM's game logic on a RISC-V CPU compiled into the weights of a stock Qwen3.5 model"
+requires-python = ">=3.12"
+license = "MIT"
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "safetensors>=0.4",
+    "pillow>=10",
+    "aiohttp>=3.9",
+    "chipformer",
+]
+
+[project.optional-dependencies]
+build = ["torch>=2.5"]              # emitting the checkpoint (chipformer's emitter uses torch)
+hf = ["torch>=2.5", "transformers>=5.0"]  # running the checkpoint in stock transformers
+dev = ["pytest>=8", "numba>=0.60"]
+
+[project.scripts]
+qwendoom = "qwendoom.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["qwendoom"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+
+[tool.uv.sources]
+# Qwenputer's q35 compiler and RV32 core (MIT), pinned; not vendored
+chipformer = { git = "https://github.com/divagr18/qwenputer", subdirectory = "experimental/riscv", rev = "bec1a0c9654ac8151b6f36ed0154a19c53141384" }

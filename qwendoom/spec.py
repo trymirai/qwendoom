@@ -1,0 +1,170 @@
+"""Tokens, records and the address map of qwendoom's RV32IM + Zba machine.
+
+Derived from Qwenputer's chipformer/rv/spec.py (MIT, (c) 2026 Divyansh Agrawal; see
+LICENSE.chipformer). The token vocabulary is upstream's, id for id: the same families, sizes,
+order and controls, and PAD = VOCAB. Families this machine no longer emits keep their ids (BD and
+SC of the removed digit file; GO only starts a run, the host feeds it).
+
+A trace is one record per instruction. Machine state changes only at a record's last token (its
+*commit*); the PC is implied: PC = ROM_BASE + 4 * (anchor + n), where the anchor is the payload of
+the latest J or R token and n counts the commits since then (an R refresh comes before the
+instruction when n reaches 63).
+
+Token families (chip vocabulary ids from 0):
+
+  V     15-bit chunk of a value, not final
+  F0    final; the value is this payload sign-extended from bit 14 (a 1-token value record)
+  F1    final; after one V: value bits 15..29, sign-extended from bit 29
+  F2    final; after two V: value bits 30..31
+  J     final; jump: anchor = payload (a 16-bit ROM word index), n = 0
+  R     final; anchor refresh: anchor = payload, n = 0, nothing executes
+  BYTE  final; putchar (ecall a7 = 1): a0 & 511 (0..255 a byte; 256 = YIELD, the tick is done)
+  FLT   not final; a fault: payload = cause (FAULTS), then 8 HEX digits of the PC, then HALT
+  HEX   not final; a hex digit of a fault record
+  QS    not final; DIV/DIVU/REM/REMU: k0, the index of the first quotient digit computed (0..8)
+  QD    not final; a quotient digit: payload k << 4 | q (digit k of 8, most significant first)
+  BD    (not emitted; upstream's digit-file row step)
+  NT, ST0, ST1, SS0, SS1, HALT   final controls (ST/SS: address bit 6 of the store)
+  GO    not final: the start of a run (the token after a state snapshot; fed by the host)
+  SC    (not emitted; upstream's digit scan)
+
+Records:
+
+  rd-writing instruction (ALU, MUL, load, LUI, AUIPC, CSR read)  F0 | V F1 | V V F2 (by size)
+  csrr rd, time (rd != x0): the input port                       the value record of the next
+                                                                 input word, injected by the host
+  DIV / DIVU / REM / REMU with rd != x0                          QS QD.. then the value record
+  the same with rd = x0, not-taken branch, FENCE                 NT
+  taken branch, JAL, JALR                                        J  (the link is in-circuit)
+  SW                                                             ST0 / ST1
+  SB, SH                                                         V V V SS0 / SS1 (merged word)
+  ECALL a7 = 1 (putchar a0)                                      BYTE(a0 & 511)
+  ECALL a7 = 93 (exit)                                           HALT
+  a fault                                                        FLT(cause) HEX x 8 HALT
+  before the instruction, when n == 63                           R
+
+Memory (ARCHITECTURE.md; native/qd_mem.h holds the same constants):
+
+  RAM   0x0000_0000 + 256 KB  words, load / store
+  DROM  0x0008_0000 + 512 KB  read-only data, bytes; loads only
+  ROM   0x0010_0000 + 256 KB  code only, pre-decoded (ref.rom_word); J / R payloads are 16-bit
+                              ROM word indices (PC = ROM_BASE + 4 * w)
+
+A DIV-class record: QS(k0), then QD(k << 4 | q_k) for k = k0..7, then the result's value record.
+q_k are the hex digits of |A| / |B| (most significant first); k0 skips digits that are known to
+be 0 from the operands' sizes (see ref.div_start), so small quotients take few tokens.
+"""
+
+FAMILY_SIZES = [("V", 1 << 15), ("F0", 1 << 15), ("F1", 1 << 15), ("F2", 4), ("J", 1 << 16),
+                ("R", 1 << 16), ("BYTE", 512), ("FLT", 8), ("HEX", 16), ("QS", 16), ("QD", 128),
+                ("BD", 256)]
+FAMILIES = {}
+_base = 0
+for _n, _s in FAMILY_SIZES:
+    FAMILIES[_n] = (_base, _s)
+    _base += _s
+CTRL = _base
+CONTROL_NAMES = ["NT", "ST0", "ST1", "SS0", "SS1", "HALT", "GO", "SC"]
+CONTROLS = {n: CTRL + i for i, n in enumerate(CONTROL_NAMES)}
+VOCAB = CTRL + len(CONTROL_NAMES)
+PAD = VOCAB  # a zero embedding row: the prefix before a snapshot is loaded
+FINAL = {"F0", "F1", "F2", "J", "R", "BYTE", "NT", "ST0", "ST1", "SS0", "SS1", "HALT"}
+PAYLOAD_BITS = {n: (s - 1).bit_length() for n, s in FAMILY_SIZES}
+assert VOCAB == 230324  # upstream chipformer.rv.spec, unchanged (PAD = 230324)
+
+FAULTS = ["illegal", "ebreak", "misaligned load", "misaligned store", "load out of range",
+          "store out of range", "bad jump", "ecall"]
+
+
+def _pow2(x: int) -> bool:
+    return x > 0 and x & (x - 1) == 0
+
+
+# the address map (ARCHITECTURE.md, native/qd_mem.h)
+RAM_BASE, RAM_SIZE = 0x0000_0000, 256 << 10
+DROM_BASE, DROM_SIZE = 0x0008_0000, 512 << 10
+ROM_BASE, ROM_SIZE = 0x0010_0000, 256 << 10
+HOST_BASE, HOST_SIZE = 0x0100_0000, 64 << 20
+RAM_WORDS, DROM_WORDS, ROM_WORDS = RAM_SIZE >> 2, DROM_SIZE >> 2, ROM_SIZE >> 2
+# the circuit decodes each region from address bits: sizes are powers of 2 and every base is a
+# multiple of its size (RAM at 0, so in_ram is "the high bits are 0")
+for _b, _s in ((RAM_BASE, RAM_SIZE), (DROM_BASE, DROM_SIZE), (ROM_BASE, ROM_SIZE)):
+    assert _pow2(_s) and _b % _s == 0, (_b, _s)
+assert RAM_BASE == 0 and RAM_SIZE <= DROM_BASE and DROM_BASE + DROM_SIZE <= ROM_BASE
+assert ROM_WORDS == 1 << 16  # J / R payloads are 16-bit word indices
+assert ROM_BASE % 4096 == 0  # AUIPC: the low 12 bits of the PC are those of 4 * w
+RAM_BITS, DROM_BITS, ROM_BITS = (RAM_SIZE - 1).bit_length(), (DROM_SIZE - 1).bit_length(), \
+    (ROM_SIZE - 1).bit_length()
+
+SP_INIT = 0x3000  # the sim stack top (QD_SIM_STACK_TOP): stack values stay 1-token F0 records
+DATA_BASE = 0x3000  # (assembler tests) .data starts here, as the sim's globals do
+N_MAX = 63  # the R refresh comes before the instruction when n == N_MAX
+MISA = 0x40001100  # RV32, I and M
+CSR_INPUT = 0xC01  # csrr rd, time: the host's input port (QD_CSR_INPUT)
+YIELD = 256  # ecall a7 = 1 with a0 = 256: BYTE(256), the tick is done (QD_YIELD_BYTE)
+
+
+def family(t: int) -> tuple[str, int]:
+    """(family or control name, payload) of a token."""
+    if t >= CTRL:
+        if t >= VOCAB:
+            raise ValueError(f"not an rv token: {t}")
+        return CONTROL_NAMES[t - CTRL], 0
+    for name, (base, size) in FAMILIES.items():
+        if base <= t < base + size:
+            return name, t - base
+    raise ValueError(f"not an rv token: {t}")
+
+
+def tok(name: str, payload: int = 0) -> int:
+    if name in CONTROLS:
+        return CONTROLS[name]
+    base, size = FAMILIES[name]
+    assert 0 <= payload < size, (name, payload)
+    return base + payload
+
+
+def is_final(t: int) -> bool:
+    return family(t)[0] in FINAL
+
+
+def value_record(v: int) -> list[int]:
+    """Tokens of a 32-bit value: as few chunks as its sign-extended size needs."""
+    v &= 0xFFFFFFFF
+    s = v - (1 << 32) if v >> 31 else v
+    c0, c1, c2 = v & 0x7FFF, v >> 15 & 0x7FFF, v >> 30
+    if -(1 << 14) <= s < 1 << 14:
+        return [tok("F0", c0)]
+    if -(1 << 29) <= s < 1 << 29:
+        return [tok("V", c0), tok("F1", c1)]
+    return [tok("V", c0), tok("V", c1), tok("F2", c2)]
+
+
+def decode_value(tokens: list[int]) -> int:
+    """Inverse of value_record (the commit's view: the final token and the V before it)."""
+    names = [family(t) for t in tokens]
+    (fam, p) = names[-1]
+    if fam == "F0":
+        v = p | (0xFFFF8000 if p >> 14 else 0)
+    elif fam == "F1":
+        v = names[-2][1] | p << 15 | (0xC0000000 if p >> 14 else 0)
+    elif fam == "F2":
+        v = names[-3][1] | names[-2][1] << 15 | p << 30
+    else:
+        raise ValueError(fam)
+    return v & 0xFFFFFFFF
+
+
+def fault_record(cause: int, pc: int) -> list[int]:
+    return ([tok("FLT", cause)] + [tok("HEX", pc >> 4 * (7 - i) & 15) for i in range(8)]
+            + [tok("HALT")])
+
+
+def sign32(v: int) -> int:
+    v &= 0xFFFFFFFF
+    return v - (1 << 32) if v >> 31 else v
+
+
+def name(t: int) -> str:
+    fam, p = family(t)
+    return fam if fam in CONTROLS else f"{fam}({p})"

@@ -1,0 +1,1169 @@
+{
+ "machine": "qwendoom: RV32IM + Zba (DOOM's playsim) in Qwen3.5 Gated DeltaNet layers",
+ "vocab": 230324,
+ "pad": 230324,
+ "n_vocab": 230336,
+ "families": {
+  "V": [
+   0,
+   32768
+  ],
+  "F0": [
+   32768,
+   32768
+  ],
+  "F1": [
+   65536,
+   32768
+  ],
+  "F2": [
+   98304,
+   4
+  ],
+  "J": [
+   98308,
+   65536
+  ],
+  "R": [
+   163844,
+   65536
+  ],
+  "BYTE": [
+   229380,
+   512
+  ],
+  "FLT": [
+   229892,
+   8
+  ],
+  "HEX": [
+   229900,
+   16
+  ],
+  "QS": [
+   229916,
+   16
+  ],
+  "QD": [
+   229932,
+   128
+  ],
+  "BD": [
+   230060,
+   256
+  ]
+ },
+ "controls": {
+  "NT": 230316,
+  "ST0": 230317,
+  "ST1": 230318,
+  "SS0": 230319,
+  "SS1": 230320,
+  "HALT": 230321,
+  "GO": 230322,
+  "SC": 230323
+ },
+ "final": [
+  "BYTE",
+  "F0",
+  "F1",
+  "F2",
+  "HALT",
+  "J",
+  "NT",
+  "R",
+  "SS0",
+  "SS1",
+  "ST0",
+  "ST1"
+ ],
+ "faults": [
+  "illegal",
+  "ebreak",
+  "misaligned load",
+  "misaligned store",
+  "load out of range",
+  "store out of range",
+  "bad jump",
+  "ecall"
+ ],
+ "code": {
+  "dims": [
+   117,
+   118,
+   119,
+   120,
+   121,
+   122,
+   123,
+   124,
+   125,
+   126,
+   127,
+   128,
+   129,
+   130,
+   131,
+   132,
+   133,
+   134,
+   135,
+   136,
+   137
+  ],
+  "nfam": 5,
+  "npay": 16,
+  "out_names": [
+   "V",
+   "F0",
+   "F1",
+   "F2",
+   "J",
+   "R",
+   "BYTE",
+   "FLT",
+   "HEX",
+   "QS",
+   "QD",
+   "BD",
+   "NT",
+   "ST0",
+   "ST1",
+   "SS0",
+   "SS1",
+   "HALT",
+   "GO",
+   "SC"
+  ],
+  "code_amp": 128,
+  "kappa": 9.5367431640625e-07,
+  "gain": 1048576.0,
+  "decoding": "greedy argmax of the tied head; code bit i of a token = family id bit i (i < nfam, the family's index in out_names), then payload bit i - nfam; its embedding row holds code_amp * (2 bit - 1) on dims[i]"
+ },
+ "layout": {
+  "hidden": 2304,
+  "ballast_dims": 9,
+  "log2_ballast": 40,
+  "ir_dims": 2231,
+  "ir_dim_index": "residual index = ballast_dims + IR dim"
+ },
+ "heads": {
+  "pc": [
+   0,
+   0,
+   1
+  ],
+  "count": [
+   0,
+   1,
+   1
+  ],
+  "j": [
+   0,
+   2,
+   1
+  ],
+  "vcnt": [
+   0,
+   3,
+   1
+  ],
+  "rom0": [
+   2,
+   0,
+   4
+  ],
+  "rom1": [
+   2,
+   1,
+   4
+  ],
+  "rom2": [
+   2,
+   2,
+   4
+  ],
+  "rom3": [
+   2,
+   3,
+   4
+  ],
+  "rom4": [
+   2,
+   4,
+   4
+  ],
+  "rom5": [
+   2,
+   5,
+   4
+  ],
+  "rom6": [
+   2,
+   6,
+   4
+  ],
+  "rom7": [
+   2,
+   7,
+   4
+  ],
+  "rom8": [
+   2,
+   8,
+   4
+  ],
+  "rom9": [
+   2,
+   9,
+   4
+  ],
+  "rom10": [
+   2,
+   10,
+   4
+  ],
+  "rom11": [
+   2,
+   11,
+   4
+  ],
+  "rom12": [
+   2,
+   12,
+   4
+  ],
+  "rom13": [
+   2,
+   13,
+   4
+  ],
+  "rom14": [
+   2,
+   14,
+   4
+  ],
+  "rom15": [
+   2,
+   15,
+   4
+  ],
+  "regs.rs1": [
+   3,
+   0,
+   1
+  ],
+  "regs.rs2": [
+   3,
+   1,
+   1
+  ],
+  "regs.rd": [
+   3,
+   2,
+   1
+  ],
+  "quo0": [
+   3,
+   3,
+   4
+  ],
+  "quo1": [
+   3,
+   4,
+   4
+  ],
+  "lag": [
+   4,
+   0,
+   1
+  ],
+  "drom0": [
+   5,
+   0,
+   4
+  ],
+  "drom1": [
+   5,
+   1,
+   4
+  ],
+  "drom2": [
+   5,
+   2,
+   4
+  ],
+  "drom3": [
+   5,
+   3,
+   4
+  ],
+  "drom4": [
+   5,
+   4,
+   4
+  ],
+  "drom5": [
+   5,
+   5,
+   4
+  ],
+  "drom6": [
+   5,
+   6,
+   4
+  ],
+  "drom7": [
+   5,
+   7,
+   4
+  ],
+  "drom8": [
+   5,
+   8,
+   4
+  ],
+  "drom9": [
+   5,
+   9,
+   4
+  ],
+  "drom10": [
+   5,
+   10,
+   4
+  ],
+  "drom11": [
+   5,
+   11,
+   4
+  ],
+  "drom12": [
+   5,
+   12,
+   4
+  ],
+  "drom13": [
+   5,
+   13,
+   4
+  ],
+  "drom14": [
+   5,
+   14,
+   4
+  ],
+  "drom15": [
+   5,
+   15,
+   4
+  ],
+  "drom16": [
+   6,
+   0,
+   4
+  ],
+  "drom17": [
+   6,
+   1,
+   4
+  ],
+  "drom18": [
+   6,
+   2,
+   4
+  ],
+  "drom19": [
+   6,
+   3,
+   4
+  ],
+  "drom20": [
+   6,
+   4,
+   4
+  ],
+  "drom21": [
+   6,
+   5,
+   4
+  ],
+  "drom22": [
+   6,
+   6,
+   4
+  ],
+  "drom23": [
+   6,
+   7,
+   4
+  ],
+  "drom24": [
+   6,
+   8,
+   4
+  ],
+  "drom25": [
+   6,
+   9,
+   4
+  ],
+  "drom26": [
+   6,
+   10,
+   4
+  ],
+  "drom27": [
+   6,
+   11,
+   4
+  ],
+  "drom28": [
+   6,
+   12,
+   4
+  ],
+  "drom29": [
+   6,
+   13,
+   4
+  ],
+  "drom30": [
+   6,
+   14,
+   4
+  ],
+  "drom31": [
+   6,
+   15,
+   4
+  ],
+  "ram0": [
+   7,
+   0,
+   4
+  ],
+  "ram1": [
+   7,
+   1,
+   4
+  ],
+  "ram2": [
+   7,
+   2,
+   4
+  ],
+  "ram3": [
+   7,
+   3,
+   4
+  ],
+  "ram4": [
+   7,
+   4,
+   4
+  ],
+  "ram5": [
+   7,
+   5,
+   4
+  ],
+  "ram6": [
+   7,
+   6,
+   4
+  ],
+  "ram7": [
+   7,
+   7,
+   4
+  ],
+  "ram8": [
+   7,
+   8,
+   4
+  ],
+  "ram9": [
+   7,
+   9,
+   4
+  ],
+  "ram10": [
+   7,
+   10,
+   4
+  ],
+  "ram11": [
+   7,
+   11,
+   4
+  ],
+  "ram12": [
+   7,
+   12,
+   4
+  ],
+  "ram13": [
+   7,
+   13,
+   4
+  ],
+  "ram14": [
+   7,
+   14,
+   4
+  ],
+  "ram15": [
+   7,
+   15,
+   4
+  ],
+  "ram16": [
+   8,
+   0,
+   4
+  ],
+  "ram17": [
+   8,
+   1,
+   4
+  ],
+  "ram18": [
+   8,
+   2,
+   4
+  ],
+  "ram19": [
+   8,
+   3,
+   4
+  ],
+  "ram20": [
+   8,
+   4,
+   4
+  ],
+  "ram21": [
+   8,
+   5,
+   4
+  ],
+  "ram22": [
+   8,
+   6,
+   4
+  ],
+  "ram23": [
+   8,
+   7,
+   4
+  ],
+  "ram24": [
+   8,
+   8,
+   4
+  ],
+  "ram25": [
+   8,
+   9,
+   4
+  ],
+  "ram26": [
+   8,
+   10,
+   4
+  ],
+  "ram27": [
+   8,
+   11,
+   4
+  ],
+  "ram28": [
+   8,
+   12,
+   4
+  ],
+  "ram29": [
+   8,
+   13,
+   4
+  ],
+  "ram30": [
+   8,
+   14,
+   4
+  ],
+  "ram31": [
+   8,
+   15,
+   4
+  ],
+  "ram32": [
+   9,
+   0,
+   4
+  ],
+  "ram33": [
+   9,
+   1,
+   4
+  ],
+  "ram34": [
+   9,
+   2,
+   4
+  ],
+  "ram35": [
+   9,
+   3,
+   4
+  ],
+  "ram36": [
+   9,
+   4,
+   4
+  ],
+  "ram37": [
+   9,
+   5,
+   4
+  ],
+  "ram38": [
+   9,
+   6,
+   4
+  ],
+  "ram39": [
+   9,
+   7,
+   4
+  ],
+  "ram40": [
+   9,
+   8,
+   4
+  ],
+  "ram41": [
+   9,
+   9,
+   4
+  ],
+  "ram42": [
+   9,
+   10,
+   4
+  ],
+  "ram43": [
+   9,
+   11,
+   4
+  ],
+  "ram44": [
+   9,
+   12,
+   4
+  ],
+  "ram45": [
+   9,
+   13,
+   4
+  ],
+  "ram46": [
+   9,
+   14,
+   4
+  ],
+  "ram47": [
+   9,
+   15,
+   4
+  ],
+  "ram48": [
+   10,
+   0,
+   4
+  ],
+  "ram49": [
+   10,
+   1,
+   4
+  ],
+  "ram50": [
+   10,
+   2,
+   4
+  ],
+  "ram51": [
+   10,
+   3,
+   4
+  ],
+  "ram52": [
+   10,
+   4,
+   4
+  ],
+  "ram53": [
+   10,
+   5,
+   4
+  ],
+  "ram54": [
+   10,
+   6,
+   4
+  ],
+  "ram55": [
+   10,
+   7,
+   4
+  ],
+  "ram56": [
+   10,
+   8,
+   4
+  ],
+  "ram57": [
+   10,
+   9,
+   4
+  ],
+  "ram58": [
+   10,
+   10,
+   4
+  ],
+  "ram59": [
+   10,
+   11,
+   4
+  ],
+  "ram60": [
+   10,
+   12,
+   4
+  ],
+  "ram61": [
+   10,
+   13,
+   4
+  ],
+  "ram62": [
+   10,
+   14,
+   4
+  ],
+  "ram63": [
+   10,
+   15,
+   4
+  ],
+  "ram64": [
+   11,
+   0,
+   4
+  ],
+  "ram65": [
+   11,
+   1,
+   4
+  ],
+  "ram66": [
+   11,
+   2,
+   4
+  ],
+  "ram67": [
+   11,
+   3,
+   4
+  ],
+  "ram68": [
+   11,
+   4,
+   4
+  ],
+  "ram69": [
+   11,
+   5,
+   4
+  ],
+  "ram70": [
+   11,
+   6,
+   4
+  ],
+  "ram71": [
+   11,
+   7,
+   4
+  ],
+  "ram72": [
+   11,
+   8,
+   4
+  ],
+  "ram73": [
+   11,
+   9,
+   4
+  ],
+  "ram74": [
+   11,
+   10,
+   4
+  ],
+  "ram75": [
+   11,
+   11,
+   4
+  ],
+  "ram76": [
+   11,
+   12,
+   4
+  ],
+  "ram77": [
+   11,
+   13,
+   4
+  ],
+  "ram78": [
+   11,
+   14,
+   4
+  ],
+  "ram79": [
+   11,
+   15,
+   4
+  ],
+  "ram80": [
+   12,
+   0,
+   4
+  ],
+  "ram81": [
+   12,
+   1,
+   4
+  ],
+  "ram82": [
+   12,
+   2,
+   4
+  ],
+  "ram83": [
+   12,
+   3,
+   4
+  ],
+  "ram84": [
+   12,
+   4,
+   4
+  ],
+  "ram85": [
+   12,
+   5,
+   4
+  ],
+  "ram86": [
+   12,
+   6,
+   4
+  ],
+  "ram87": [
+   12,
+   7,
+   4
+  ],
+  "ram88": [
+   12,
+   8,
+   4
+  ],
+  "ram89": [
+   12,
+   9,
+   4
+  ],
+  "ram90": [
+   12,
+   10,
+   4
+  ],
+  "ram91": [
+   12,
+   11,
+   4
+  ],
+  "ram92": [
+   12,
+   12,
+   4
+  ],
+  "ram93": [
+   12,
+   13,
+   4
+  ],
+  "ram94": [
+   12,
+   14,
+   4
+  ],
+  "ram95": [
+   12,
+   15,
+   4
+  ],
+  "ram96": [
+   13,
+   0,
+   4
+  ],
+  "ram97": [
+   13,
+   1,
+   4
+  ],
+  "ram98": [
+   13,
+   2,
+   4
+  ],
+  "ram99": [
+   13,
+   3,
+   4
+  ],
+  "ram100": [
+   13,
+   4,
+   4
+  ],
+  "ram101": [
+   13,
+   5,
+   4
+  ],
+  "ram102": [
+   13,
+   6,
+   4
+  ],
+  "ram103": [
+   13,
+   7,
+   4
+  ],
+  "ram104": [
+   13,
+   8,
+   4
+  ],
+  "ram105": [
+   13,
+   9,
+   4
+  ],
+  "ram106": [
+   13,
+   10,
+   4
+  ],
+  "ram107": [
+   13,
+   11,
+   4
+  ],
+  "ram108": [
+   13,
+   12,
+   4
+  ],
+  "ram109": [
+   13,
+   13,
+   4
+  ],
+  "ram110": [
+   13,
+   14,
+   4
+  ],
+  "ram111": [
+   13,
+   15,
+   4
+  ],
+  "ram112": [
+   14,
+   0,
+   4
+  ],
+  "ram113": [
+   14,
+   1,
+   4
+  ],
+  "ram114": [
+   14,
+   2,
+   4
+  ],
+  "ram115": [
+   14,
+   3,
+   4
+  ],
+  "ram116": [
+   14,
+   4,
+   4
+  ],
+  "ram117": [
+   14,
+   5,
+   4
+  ],
+  "ram118": [
+   14,
+   6,
+   4
+  ],
+  "ram119": [
+   14,
+   7,
+   4
+  ],
+  "ram120": [
+   14,
+   8,
+   4
+  ],
+  "ram121": [
+   14,
+   9,
+   4
+  ],
+  "ram122": [
+   14,
+   10,
+   4
+  ],
+  "ram123": [
+   14,
+   11,
+   4
+  ],
+  "ram124": [
+   14,
+   12,
+   4
+  ],
+  "ram125": [
+   14,
+   13,
+   4
+  ],
+  "ram126": [
+   14,
+   14,
+   4
+  ],
+  "ram127": [
+   14,
+   15,
+   4
+  ]
+ },
+ "value_heads_per_key_head": 4,
+ "state_rows": {
+  "a_ref": 16777216,
+  "a_bit": 128,
+  "ref_cols": [
+   0,
+   1
+  ],
+  "tables": {
+   "pc": "row 0: ballast; anchor (PC word index) bit i at column 2 + i",
+   "count/j/vcnt": "row 0: a_bit * 2^-k at column 2 (k = n for count, 0 for j and vcnt); row 1: ballast",
+   "regs.rs1/rs2/rd": "row r (1..31): ballast; bit i of x_r at column core.reg_columns()[i][0]",
+   "quo*/lag": "row 0: ballast only",
+   "rom*/drom*": "byte tables (core.QdCore.byte_table) of the word index w ((pc - rom base) >> 2 of the pre-decoded ROM words, ref.rom_words; (addr - drom base) >> 2): table h = w >> 12, value head (w >> 10) & 3, row (w >> 4) & 63 | (w & 8) << 3, byte b at column 2 + 4 * (w & 15) + b (values 0..255); every row carries the ballast, zero bytes included",
+   "ram*": "word index w = (addr >> 2): value head bits [4, 0], row bits [5, 6, 7, 8, 9, 10, 11], key head bits [1, 2, 3, 12, 13, 14, 15] of w; the word's bits at columns 2..33; one row per nonzero word"
+  }
+ },
+ "address_map": {
+  "ram": [
+   0,
+   262144
+  ],
+  "drom": [
+   524288,
+   524288
+  ],
+  "rom": [
+   1048576,
+   262144
+  ],
+  "host": [
+   16777216,
+   67108864
+  ],
+  "sp_init": 12288
+ },
+ "io": {
+  "input": "csrr rd, time (CSR 0xC01): the circuit predicts F0(0); the host injects the next input word's value record (F0 | V F1 | V V F2)",
+  "yield": "ecall a7 = 1, a0 = 256: BYTE(256)",
+  "putchar": "ecall a7 = 1: BYTE(a0 & 511)",
+  "exit": "ecall a7 = 93: HALT"
+ },
+ "run": [
+  "reset every recurrent state and conv window to 0",
+  "step PAD (token 230324, a zero embedding row: every state stays 0)",
+  "write the snapshot rows (qwendoom.snapshot.state_rows): recurrent state[layer][value head][row, :] = vec (layer 0-based, value head within the layer); every other row stays 0",
+  "step GO (token 230322); its prediction is the first token of the record at pc; then feed each predicted (or host-injected) token"
+ ],
+ "circuit": {
+  "layers": 16,
+  "dims": 2231,
+  "heads": 186,
+  "ffn_units": 36534,
+  "max_units": 8192,
+  "max_heads": 16
+ },
+ "nonzeros": {
+  "chip_layers": 1521437,
+  "per_layer": {
+   "0": 1987,
+   "1": 77961,
+   "2": 73979,
+   "3": 108503,
+   "4": 37714,
+   "5": 92309,
+   "6": 221961,
+   "7": 146974,
+   "8": 105603,
+   "9": 103865,
+   "10": 103104,
+   "11": 103104,
+   "12": 103104,
+   "13": 103104,
+   "14": 112568,
+   "15": 25597,
+   "16": 0
+  },
+  "embedding": 8925999,
+  "total": 10449740
+ },
+ "config": {
+  "hidden_size": 2304,
+  "num_hidden_layers": 17,
+  "linear_num_key_heads": 16,
+  "linear_num_value_heads": 64,
+  "intermediate_size": 8192
+ }
+}

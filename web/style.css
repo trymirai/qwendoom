@@ -1,0 +1,560 @@
+/* qwendoom page. The monitor is drawn in "design pixels" (--u): 1 --u is 1px at full size
+   (a 753px wide monitor) and scales down with the window, so the whole object keeps its
+   proportions. Text inside it uses --t, which stops shrinking at small sizes to stay legible. */
+
+:root {
+  --bg: #080e0d;
+  --ink: #eef4ef;
+  --ink-2: #a7b7a6;
+  --ink-3: #8ea08f;
+  --hair: rgba(214, 240, 226, 0.12);
+  --rule: rgba(214, 240, 226, 0.08);
+  --serif: Gelasio, Georgia, "Times New Roman", serif;
+  --sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --mono: "Roboto Mono", Menlo, "DejaVu Sans Mono", Consolas, monospace;
+  --page: min(932px, 100% - 32px);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html { background: var(--bg); -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+  color: var(--ink);
+  font: 400 16px/1.5 var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* a teal glow at the top, right of centre, fading slowly downwards (stops fitted to the design) */
+  background:
+    radial-gradient(1240px 1550px at 64.8% 0, rgb(72 98 99 / 1) 3%, rgb(72 98 99 / 0.91) 9.7%,
+      rgb(72 98 99 / 0.78) 16%, rgb(72 98 99 / 0.67) 23%, rgb(72 98 99 / 0.56) 29%,
+      rgb(72 98 99 / 0.46) 35.5%, rgb(72 98 99 / 0.38) 42%, rgb(72 98 99 / 0.3) 48%,
+      rgb(72 98 99 / 0.22) 55%, rgb(72 98 99 / 0.14) 61%, rgb(72 98 99 / 0.1) 68%,
+      rgb(72 98 99 / 0.076) 74%, rgb(72 98 99 / 0.053) 81%, rgb(72 98 99 / 0.032) 87%,
+      rgb(72 98 99 / 0.012) 94%, rgb(72 98 99 / 0) 100%),
+    linear-gradient(180deg, #0a1111 0, var(--bg) 1000px);
+  background-repeat: no-repeat;
+  display: flow-root; /* keep the header's margin inside the body, under the glow */
+}
+
+a { color: inherit; }
+
+/* ---------------------------------------------------------------- header */
+
+.bar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: min(1069px, 100% - 32px);
+  height: 65px;
+  margin: 21.5px auto 0;
+  padding: 0 19.5px 0 26.5px;
+  border: 1px solid rgba(214, 240, 226, 0.08);
+  border-radius: 999px;
+  background: rgba(12, 22, 21, 0.74);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+}
+
+.wordmark {
+  margin-top: 7px; /* sits a little low in the bar, like the design */
+  font: 400 28.4px/1 var(--serif);
+  color: #f1f5f1;
+  text-decoration: none;
+}
+.wordmark span { color: #a3b0a8; }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 37.5px;
+  padding: 0 14.5px 0 16px;
+  border: 1px solid rgba(214, 240, 226, 0.5);
+  border-radius: 999px;
+  font: 400 14px/1 var(--sans);
+  color: #eef4ef;
+  text-decoration: none;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+.pill:hover { background: rgba(214, 240, 226, 0.08); border-color: rgba(214, 240, 226, 0.6); }
+.pill svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; opacity: 0.85; }
+
+:focus-visible { outline: 2px solid rgba(160, 230, 190, 0.7); outline-offset: 3px; }
+
+/* ---------------------------------------------------------------- stage */
+
+.stage {
+  position: relative;
+  padding: 38.5px 0 0;
+  --mw: min(753px, 100vw - 32px);
+}
+
+.waves {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  top: calc(38.5px + var(--mw) * 0.1793);
+  height: calc(var(--mw) * 0.3187);
+  pointer-events: none;
+  overflow: visible;
+}
+.waves use { fill: none; vector-effect: non-scaling-stroke; }
+.waves .w1 { stroke: rgba(255, 255, 255, 0.1); stroke-width: 1; }
+.waves .w2 { stroke: rgba(255, 255, 255, 0.025); stroke-width: 1; }
+
+.monitor-wrap {
+  position: relative;
+  width: var(--mw);
+  margin: 0 auto;
+  container-type: inline-size;
+}
+
+.monitor, .stand {
+  --u: calc(100cqw / 753);
+  --t: max(var(--u), 0.62px);
+}
+
+/* ---------------------------------------------------------------- monitor */
+
+.monitor {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 0 calc(37.5 * var(--u));
+  border-radius: calc(30 * var(--u)) calc(30 * var(--u)) calc(24 * var(--u)) calc(24 * var(--u));
+  background:
+    radial-gradient(45% 40% at 100% 100%, rgba(70, 60, 40, 0.2), rgba(70, 60, 40, 0)),
+    linear-gradient(180deg, rgba(255, 255, 250, 0.14), rgba(255, 255, 250, 0) 16%, rgba(60, 50, 30, 0) 80%, rgba(60, 50, 30, 0.03)),
+    linear-gradient(90deg, #dfdccd 0%, #d5d1c1 28%, #cdc9b9 50%, #c5c1b0 72%, #b9b5a5 100%);
+  box-shadow:
+    inset 0 calc(2 * var(--u)) calc(1 * var(--u)) rgba(255, 255, 255, 0.55),
+    inset calc(1.5 * var(--u)) 0 calc(1 * var(--u)) rgba(255, 255, 255, 0.35),
+    inset calc(-2 * var(--u)) 0 calc(3 * var(--u)) rgba(70, 60, 40, 0.1),
+    inset 0 calc(-8 * var(--u)) calc(8 * var(--u)) calc(-6 * var(--u)) rgba(70, 60, 40, 0.12),
+    0 calc(36 * var(--u)) calc(70 * var(--u)) rgba(0, 0, 0, 0.45),
+    0 calc(10 * var(--u)) calc(22 * var(--u)) rgba(0, 0, 0, 0.35);
+}
+
+/* the moulded rim: a faint raised line inset from the edge */
+.monitor::before {
+  content: "";
+  position: absolute;
+  inset: calc(13.5 * var(--u)) calc(13.5 * var(--u)) calc(11.5 * var(--u));
+  border-radius: calc(17 * var(--u)) calc(17 * var(--u)) calc(12 * var(--u)) calc(12 * var(--u));
+  border: max(1px, calc(1 * var(--u))) solid rgba(255, 255, 250, 0.32);
+  box-shadow: 0 0 0 max(0.5px, calc(0.5 * var(--u))) rgba(110, 100, 80, 0.06);
+  pointer-events: none;
+}
+
+.top {
+  position: relative;
+  height: calc(73 * var(--t));
+  display: flex;
+  justify-content: center;
+  padding-top: calc(13 * var(--t));
+}
+
+/* LCD panel: recessed, greenish */
+.lcd {
+  position: relative;
+  display: flex;
+  height: calc(47 * var(--t));
+  border-radius: calc(5 * var(--t));
+  background:
+    radial-gradient(70% 120% at 50% 40%, #b8bba0 0%, #aeb297 55%, #9fa388 100%);
+  box-shadow:
+    inset 0 calc(1 * var(--t)) 0 rgba(64, 70, 44, 0.42),
+    inset 0 calc(3 * var(--t)) calc(5 * var(--t)) rgba(64, 70, 44, 0.22),
+    inset 0 calc(-1 * var(--t)) calc(1 * var(--t)) rgba(255, 255, 240, 0.18),
+    0 0 0 calc(1 * var(--t)) rgba(255, 255, 245, 0.18),
+    0 calc(1 * var(--t)) 0 calc(0.5 * var(--t)) rgba(255, 255, 245, 0.5);
+}
+
+.cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: calc(112.5 * var(--t));
+  padding: calc(1 * var(--t)) calc(14 * var(--t)) 0;
+}
+.cell.wide { min-width: calc(145 * var(--t)); }
+/* the outer readouts sit a little towards the middle, as on the real panel */
+.cell:first-child { padding-left: calc(26 * var(--t)); }
+.cell:last-child { padding-right: calc(26 * var(--t)); }
+.cell + .cell::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: calc(7 * var(--t));
+  bottom: calc(6 * var(--t));
+  width: max(1px, calc(1 * var(--t)));
+  background: rgba(88, 96, 66, 0.32);
+  box-shadow: max(1px, calc(1 * var(--t))) 0 0 rgba(255, 255, 240, 0.12);
+}
+
+.num {
+  display: block;
+  font: 360 calc(16.5 * var(--t))/1 var(--mono);
+  font-variant-numeric: tabular-nums slashed-zero;
+  font-feature-settings: "zero" 1, "tnum" 1;
+  color: #414d38;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+.num .sep { font-family: var(--sans); }
+
+.label {
+  margin-top: calc(6 * var(--t));
+  font: 400 calc(9 * var(--t))/1 var(--sans);
+  letter-spacing: 0.085em;
+  text-transform: uppercase;
+  color: #5c664e;
+  white-space: nowrap;
+}
+
+/* the screen recess and the tube */
+.recess {
+  position: relative;
+  padding: calc(12 * var(--u));
+  border-radius: calc(25 * var(--u));
+  background: linear-gradient(to bottom right, #46443a 0%, #5a584c 25%, #767263 50%, #9e9a87 75%, #c1bca8 100%);
+  box-shadow:
+    inset 0 calc(3 * var(--u)) calc(5 * var(--u)) rgba(20, 18, 12, 0.22),
+    inset calc(3 * var(--u)) 0 calc(5 * var(--u)) rgba(20, 18, 12, 0.1),
+    0 calc(1 * var(--u)) 0 rgba(255, 255, 250, 0.45),
+    0 calc(-1 * var(--u)) 0 rgba(90, 80, 60, 0.12);
+}
+
+.screen {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: calc(14 * var(--u));
+  background: #000;
+  box-shadow: 0 0 0 max(1px, calc(1.5 * var(--u))) #1e241e;
+  outline: none;
+  cursor: default;
+}
+.screen:focus-visible { box-shadow: 0 0 0 max(1px, calc(1.5 * var(--u))) #1e241e, 0 0 0 calc(3 * var(--u)) rgba(150, 220, 170, 0.35); }
+
+.screen canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
+/* CRT treatment: faint scanlines (one per game row), a vignette, a hint of glass */
+.crt {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    linear-gradient(128deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.012) 28%, rgba(255, 255, 255, 0) 42%),
+    radial-gradient(130% 115% at 50% 50%, rgba(0, 0, 0, 0) 58%, rgba(0, 0, 0, 0.42) 100%),
+    linear-gradient(rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.11) 50%) 0 0 / 100% calc(100% / 200);
+  box-shadow: inset 0 0 calc(18 * var(--u)) rgba(0, 0, 0, 0.55);
+}
+
+/* status over the picture: centred on the empty screen, a small tag at the top once the game
+   draws (so it never covers the view or the status bar) */
+.screen-msg {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 90%;
+  margin: 0;
+  padding: 0.3em 0.9em;
+  border-radius: 999px;
+  text-align: center;
+  font: 400 calc(12 * var(--t))/1.4 var(--mono);
+  letter-spacing: 0.06em;
+  color: rgba(170, 220, 180, 0.7);
+  pointer-events: none;
+}
+.screen.live .screen-msg {
+  top: 5%;
+  transform: translateX(-50%);
+  color: rgba(200, 235, 205, 0.9);
+  background: rgba(0, 0, 0, 0.6);
+}
+.screen-msg:empty { display: none; }
+
+/* bottom strip: badge, buttons, power LED */
+.strip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(67.5 * var(--t));
+}
+
+.brand {
+  position: absolute;
+  left: calc(6 * var(--u));
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: calc(15 * var(--t));
+  font: 400 calc(11.6 * var(--t))/1 var(--sans);
+  color: #7d7a6d;
+  white-space: nowrap;
+  text-shadow: 0 1px 0 rgba(255, 255, 250, 0.35);
+}
+.apple { width: calc(12.5 * var(--t)); height: calc(15 * var(--t)); margin-top: calc(-2 * var(--t)); flex: none; }
+
+.buttons { display: flex; gap: calc(8 * var(--t)); }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(7 * var(--t));
+  width: calc(76 * var(--t));
+  height: calc(32 * var(--t));
+  padding: 0;
+  border: max(1px, calc(1 * var(--t))) solid #a8a38f;
+  border-radius: calc(4.5 * var(--t));
+  font: 500 calc(12.5 * var(--t))/1 var(--sans);
+  color: #48513d;
+  background: linear-gradient(180deg, #ced4bc 0%, #c2c9ad 55%, #b8c0a2 100%);
+  box-shadow:
+    inset 0 calc(1 * var(--t)) 0 rgba(255, 255, 245, 0.75),
+    inset 0 calc(-1 * var(--t)) 0 rgba(90, 100, 60, 0.12),
+    0 calc(1.5 * var(--t)) calc(2.5 * var(--t)) rgba(70, 60, 40, 0.28);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: filter 0.12s, box-shadow 0.12s, transform 0.06s;
+}
+.btn svg { width: calc(12.5 * var(--t)); height: calc(12.5 * var(--t)); fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.btn .i-play { fill: currentColor; stroke-width: 1; display: none; }
+.btn.resume .i-play { display: block; }
+.btn.resume .i-pause { display: none; }
+.btn .i-stop { fill: currentColor; stroke-width: 1; display: none; }
+.btn.stop .i-stop { display: block; }
+.btn.stop .i-power { display: none; }
+.btn:hover:not(:disabled) { filter: brightness(1.03); }
+.btn:active:not(:disabled) {
+  transform: translateY(calc(0.5 * var(--t)));
+  background: linear-gradient(180deg, #bec6a7 0%, #c8cfb3 100%);
+  box-shadow:
+    inset 0 calc(1.5 * var(--t)) calc(3 * var(--t)) rgba(60, 70, 40, 0.28),
+    0 calc(0.5 * var(--t)) 0 rgba(255, 255, 245, 0.5);
+}
+.btn:disabled {
+  cursor: default;
+  color: #a3a091;
+  border-color: #c3beac;
+  background: linear-gradient(180deg, #cecabb 0%, #c9c5b5 100%);
+  box-shadow:
+    inset 0 calc(1 * var(--t)) 0 rgba(255, 255, 250, 0.35),
+    0 calc(1 * var(--t)) calc(1.5 * var(--t)) rgba(70, 60, 40, 0.1);
+}
+.btn:focus-visible { outline-offset: 2px; }
+
+.led {
+  position: absolute;
+  right: calc(2.5 * var(--u));
+  bottom: calc(19 * var(--t));
+  width: calc(6.5 * var(--t));
+  height: calc(5 * var(--t));
+  border-radius: calc(2 * var(--t));
+  background: #8a8f70;
+  box-shadow:
+    inset 0 0 0 max(0.5px, calc(0.8 * var(--t))) rgba(70, 76, 40, 0.7),
+    inset 0 calc(1 * var(--t)) calc(1 * var(--t)) rgba(40, 46, 20, 0.35),
+    0 calc(0.5 * var(--t)) 0 rgba(255, 255, 250, 0.45);
+  --glow: 1;
+}
+.monitor[data-state="starting"] .led,
+.monitor[data-state="running"] .led {
+  background: radial-gradient(circle at 50% 40%, #e9ffd4 0%, #8cf46a 45%, #4fc23c 100%);
+  box-shadow:
+    inset 0 0 0 max(0.5px, calc(0.6 * var(--t))) rgba(40, 110, 30, 0.6),
+    0 0 calc(3 * var(--t)) calc(1 * var(--t)) rgba(130, 255, 100, calc(0.55 * var(--glow))),
+    0 0 calc(10 * var(--t)) calc(3 * var(--t)) rgba(120, 255, 90, calc(0.3 * var(--glow)));
+  opacity: calc(0.6 + 0.4 * var(--glow));
+}
+.monitor[data-state="paused"] .led {
+  background: radial-gradient(circle at 50% 40%, #fff3c4 0%, #e8c75a 55%, #b8932c 100%);
+  box-shadow:
+    inset 0 0 0 max(0.5px, calc(0.6 * var(--t))) rgba(120, 90, 20, 0.6),
+    0 0 calc(4 * var(--t)) calc(1 * var(--t)) rgba(255, 210, 90, 0.45);
+}
+
+/* the stand */
+.stand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.neck {
+  width: calc(256 * var(--u));
+  height: calc(28 * var(--u));
+  border-radius: 0 0 calc(6 * var(--u)) calc(6 * var(--u));
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.26), rgba(0, 0, 0, 0) 16%, rgba(0, 0, 0, 0) 84%, rgba(0, 0, 0, 0.3)),
+    linear-gradient(180deg, #46453f 0%, #6c6b62 50%, #7f7e74 80%, #85847a 100%);
+}
+/* the foot is a disc seen from above: its far (top) edge curves more than its near edge */
+.foot {
+  position: relative;
+  width: calc(406 * var(--u));
+  height: calc(22.5 * var(--u));
+  margin-top: calc(-3.5 * var(--u));
+  border-radius: calc(203 * var(--u)) calc(203 * var(--u)) calc(45 * var(--u)) calc(45 * var(--u)) /
+    calc(11 * var(--u)) calc(11 * var(--u)) calc(5.5 * var(--u)) calc(5.5 * var(--u));
+  background: linear-gradient(180deg, #939185 0%, #8e8c80 40%, #858477 70%, #7c7b70 100%);
+  box-shadow:
+    inset 0 calc(-1.5 * var(--u)) 0 rgba(176, 174, 160, 0.95),
+    inset 0 calc(1 * var(--u)) calc(1 * var(--u)) rgba(255, 255, 250, 0.12),
+    0 calc(14 * var(--u)) calc(26 * var(--u)) rgba(0, 0, 0, 0.6),
+    0 calc(4 * var(--u)) calc(8 * var(--u)) rgba(0, 0, 0, 0.4);
+}
+
+/* ---------------------------------------------------------------- controls */
+
+.rule {
+  width: var(--page);
+  height: 1px;
+  margin: 59px auto 0;
+  border: 0;
+  background: var(--rule);
+}
+
+.controls + .rule { margin-top: 34px; }
+
+.controls {
+  width: var(--page);
+  margin: 0 auto;
+  padding: 30px 0 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 36px;
+}
+
+.controls h2 {
+  margin: 0 0 10.5px;
+  font: 400 13.5px/1.4 var(--sans);
+  color: var(--ink-2);
+}
+
+.keys {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8.5px;
+}
+
+.key {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  height: 69.5px;
+  padding: 0 4px;
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(214, 240, 226, 0.03), rgba(214, 240, 226, 0.02));
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.08s, border-color 0.08s, box-shadow 0.08s, transform 0.05s;
+}
+.key b {
+  font: 500 15.5px/1 var(--sans);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.key small {
+  font: 400 12px/1 var(--sans);
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: #99ad96;
+  white-space: nowrap;
+}
+.key:hover { border-color: rgba(214, 240, 226, 0.2); }
+.key.held {
+  border-color: rgba(170, 240, 190, 0.55);
+  background: linear-gradient(180deg, rgba(150, 230, 170, 0.2), rgba(150, 230, 170, 0.12));
+  box-shadow: 0 0 0 1px rgba(170, 240, 190, 0.15) inset, 0 0 18px rgba(120, 220, 150, 0.16);
+  transform: translateY(1px);
+}
+.key.held small { color: #cfe8cf; }
+
+.weapons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.key.small { padding: 0; }
+
+/* ---------------------------------------------------------------- about */
+
+.about {
+  width: var(--page);
+  margin: 0 auto;
+  padding: 40px 0 96px;
+  color: #a4b6a8;
+  font-size: 16.9px;
+  line-height: 1.65;
+}
+.about p { margin: 0 0 1.1em; }
+.about a { color: #d6e4d8; text-decoration-color: rgba(214, 228, 216, 0.35); text-underline-offset: 3px; }
+.about a:hover { text-decoration-color: currentColor; }
+
+/* ---------------------------------------------------------------- narrow windows */
+
+@media (max-width: 760px) {
+  .bar { height: 54px; padding: 0 12px 0 22px; margin-top: 16px; }
+  .wordmark { font-size: 27px; }
+  .pill { height: 32px; font-size: 14px; padding: 0 12px 0 14px; }
+  .stage { padding-top: 28px; }
+  .waves { top: calc(28px + var(--mw) * 0.1793); }
+  .rule { margin-top: 40px; }
+  .controls { grid-template-columns: 1fr; row-gap: 24px; padding-top: 24px; }
+  .about { font-size: 16.5px; padding-top: 32px; }
+}
+
+@media (max-width: 420px) {
+  .keys { gap: 7px; }
+  .key { height: 60px; gap: 7px; }
+  .key b { font-size: 15px; }
+  .key small { font-size: 10.5px; letter-spacing: 0.02em; }
+  .weapons { gap: 5px; }
+}
+
+/* the smallest monitors: the badge keeps its apple, its name would run into the buttons */
+@container (max-width: 340px) {
+  .brand span { display: none; }
+}
+
+/* scanlines only where a game row spans at least two device pixels; finer ones alias into moire */
+@media (max-width: 999px) {
+  .crt { background:
+    linear-gradient(128deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.012) 28%, rgba(255, 255, 255, 0) 42%),
+    radial-gradient(130% 115% at 50% 50%, rgba(0, 0, 0, 0) 58%, rgba(0, 0, 0, 0.42) 100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .key, .btn, .pill { transition: none; }
+}

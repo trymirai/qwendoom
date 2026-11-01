@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>qwendoom</title>
+<meta name="description" content="DOOM's game logic running on a RISC-V CPU compiled into the weights of a stock Qwen3.5 model.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0b1413">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gelasio:wght@400&family=Inter:wght@400;500&family=Roboto+Mono:wght@300..500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="bar">
+  <a class="wordmark" href="/" aria-label="qwendoom">qwen<span>doom</span></a>
+  <a class="pill" href="https://trymirai.com" target="_blank" rel="noopener">by Mirai
+    <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 9.5l7-7M3.75 2.5H9.5v5.75"/></svg></a>
+</header>
+
+<main>
+  <section class="stage" aria-label="The game">
+    <!-- thin wave lines behind the monitor -->
+    <svg class="waves" viewBox="0 0 1728 240" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <path id="wave" d="M0 77.5C24 85.6 48 93.4 72 101.7C96 110.1 120 119.6 144 127.8C168 136 192 144.9 216 151.1C240 157.2 264 162.4 288 164.9C312 167.4 336 167.7 360 166C384 164.3 408 159.1 432 154.8C456 150.5 480 144.5 504 140.2C528 136 552 132.5 576 129.4C600 126.3 624 123.8 648 121.6C672 119.4 696 117.7 720 116.2C744 114.7 768 113.5 792 112.4C816 111.3 840 110.5 864 109.6C888 108.8 912 108 936 107.1C960 106.2 984 105.4 1008 104.2C1032 103.1 1056 101.9 1080 100.3C1104 98.6 1128 96.8 1152 94.5C1176 92.2 1200 89.5 1224 86.3C1248 83 1272 78.4 1296 75.1C1320 71.9 1344 68.1 1368 66.6C1392 65.1 1416 64.7 1440 66.1C1464 67.5 1488 70.9 1512 75.2C1536 79.5 1560 85.2 1584 92.2C1608 99.1 1632 108.7 1656 117.1C1680 125.4 1704 133.9 1728 142.3"/>
+      </defs>
+      <use href="#wave" class="w2" transform="translate(0 -12.5)"/>
+      <use href="#wave" class="w1"/>
+      <use href="#wave" class="w2" transform="translate(0 12.5)"/>
+    </svg>
+
+    <div class="monitor-wrap">
+      <div class="monitor" id="monitor" data-state="idle">
+        <div class="top">
+          <div class="lcd" role="group" aria-label="CPU counters">
+            <div class="cell"><output id="tokens" class="num">0</output><span class="label">Tokens</span></div>
+            <div class="cell wide"><output id="tps" class="num">—</output><span class="label">Tokens / second</span></div>
+            <div class="cell"><output id="frames" class="num">0</output><span class="label">Frames</span></div>
+          </div>
+        </div>
+
+        <div class="recess">
+          <div class="screen" id="screen" tabindex="0" aria-label="Game screen. Click, then use the keyboard to play.">
+            <canvas id="canvas" width="320" height="200"></canvas>
+            <div class="crt" aria-hidden="true"></div>
+            <p class="screen-msg" id="screen-msg" aria-live="polite"></p>
+          </div>
+        </div>
+
+        <div class="strip">
+          <div class="brand">
+            <svg class="apple" viewBox="0 0 24 29" aria-hidden="true">
+              <defs>
+                <clipPath id="apple-shape">
+                  <path d="M16.6 1.2c.2 1.9-.6 3.7-1.7 4.8-1.2 1.2-2.9 2-4.5 1.8-.2-1.8.7-3.6 1.8-4.7 1.1-1.1 2.9-1.9 4.4-1.9z"/>
+                  <path d="M12.2 8.9c1.3 0 2.9-1.1 4.9-1.1 1 0 4.1.2 6.1 3.1-3.6 2.1-3.3 7.5.6 9.1-.7 2-1.7 3.9-3 5.6-1.1 1.5-2.4 2.9-4.1 2.9-1.7 0-2.2-1-4.3-1-2.1 0-2.7 1-4.3 1-1.7 0-2.9-1.5-4.1-3.1C1.8 22.6.3 18.8.3 15.2c0-5.4 3.5-8.2 6.9-8.2 1.9 0 3.6 1.9 5 1.9z"/>
+                </clipPath>
+              </defs>
+              <g clip-path="url(#apple-shape)">
+                <rect y="0" width="24" height="11.4" fill="#61bb46"/>
+                <rect y="11.4" width="24" height="3.4" fill="#fdb827"/>
+                <rect y="14.8" width="24" height="3.4" fill="#f5821f"/>
+                <rect y="18.2" width="24" height="3.4" fill="#e03a3e"/>
+                <rect y="21.6" width="24" height="3.4" fill="#963d97"/>
+                <rect y="25" width="24" height="4" fill="#009ddc"/>
+              </g>
+            </svg>
+            <span>AppleColor Display</span>
+          </div>
+          <div class="buttons">
+            <button type="button" class="btn" id="start">
+              <svg class="i-power" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.75v5.5"/><path d="M4.6 3.9a5.25 5.25 0 1 0 6.8 0"/></svg>
+              <svg class="i-stop" viewBox="0 0 16 16" aria-hidden="true"><rect x="4" y="4" width="8" height="8" rx="1"/></svg>
+              <span id="start-label">Start</span>
+            </button>
+            <button type="button" class="btn" id="pause" disabled>
+              <svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 3v10M10.5 3v10"/></svg>
+              <svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3l8 5-8 5z"/></svg>
+              <span id="pause-label">Pause</span>
+            </button>
+          </div>
+          <span class="led" id="led" aria-hidden="true"></span>
+        </div>
+      </div>
+      <div class="stand" aria-hidden="true"><div class="neck"></div><div class="foot"></div></div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section class="controls" aria-label="Controls">
+    <div class="group">
+      <h2>Movement</h2>
+      <div class="keys">
+        <button type="button" class="key" data-action="left" tabindex="-1"><b>Q / ←</b><small>Turn left</small></button>
+        <button type="button" class="key" data-action="forward" tabindex="-1"><b>W / ↑</b><small>Forward</small></button>
+        <button type="button" class="key" data-action="right" tabindex="-1"><b>E / →</b><small>Turn right</small></button>
+        <button type="button" class="key" data-action="strafeleft" tabindex="-1"><b>A</b><small>Strafe left</small></button>
+        <button type="button" class="key" data-action="back" tabindex="-1"><b>S / ↓</b><small>Backward</small></button>
+        <button type="button" class="key" data-action="straferight" tabindex="-1"><b>D</b><small>Strafe right</small></button>
+      </div>
+    </div>
+    <div class="group">
+      <h2>Actions</h2>
+      <div class="keys">
+        <button type="button" class="key" data-action="fire" tabindex="-1"><b>CTRL</b><small>Fire</small></button>
+        <button type="button" class="key" data-action="use" tabindex="-1"><b>SPACE</b><small>Use / open</small></button>
+        <button type="button" class="key" data-action="run" tabindex="-1"><b>SHIFT</b><small>Run</small></button>
+        <button type="button" class="key" data-action="menu" tabindex="-1"><b>ESC</b><small>Game menu</small></button>
+        <button type="button" class="key" data-action="enter" tabindex="-1"><b>ENTER</b><small>Confirm</small></button>
+        <div class="weapons">
+          <button type="button" class="key small" data-action="weapon1" tabindex="-1" aria-label="Weapon 1"><b>1</b></button>
+          <button type="button" class="key small" data-action="weapon2" tabindex="-1" aria-label="Weapon 2"><b>2</b></button>
+          <button type="button" class="key small" data-action="weapon3" tabindex="-1" aria-label="Weapon 3"><b>3</b></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section class="about">
+    <p>Movement, enemies and weapons run through a RISC-V CPU compiled into Qwen weights. A numerical
+      CPU: nobody trained this model, a compiler computed every weight of a stock Qwen3.5 checkpoint.
+      Its Gated DeltaNet state holds the RAM, the level and the program, and every game tick runs as
+      RV32 machine code that the model predicts one token at a time, while the host only draws the
+      frames and feeds your keys in as tokens. A tick takes about 23,000 tokens, and one Apple
+      silicon CPU core runs about 30,000 a second: about a frame a second. Built on
+      <a href="https://github.com/divagr18/qwenputer" target="_blank" rel="noopener">Qwenputer</a>’s
+      compiler and inspired by
+      <a href="https://github.com/dbreunig/nesformer" target="_blank" rel="noopener">nesformer</a>; game
+      data from Freedoom.</p>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
